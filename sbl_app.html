@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olá Usuário - SBL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            padding-bottom: 60px; /* Espaço para o footer */
+        }
+        
+        .sbl-red {
+            background: linear-gradient(135deg, #cc0000 0%, #660000 100%);
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+        }
+        
+        .transaction-item {
+            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+            transition: background-color 0.2s ease;
+        }
+        
+        .transaction-item:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .action-button {
+            transition: all 0.2s ease;
+        }
+        
+        .action-button:hover {
+            transform: scale(1.1);
+        }
+        
+        .floating-button {
+            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.3);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #cc0000;
+            box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #cc0000 0%, #660000 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(204, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            padding: 0.75rem 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e5e5;
+        }
+
+        /* Footer styles */
+        .footer-credit {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            padding: 8px 0;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="pb-20">
+    <!-- Header -->
+    <header class="sbl-red text-white py-4 px-6 fixed top-0 w-full z-10">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center">
+                <div class="h-8 w-8 rounded-full bg-white flex items-center justify-center mr-3">
+                    <span class="text-red-800 font-bold">S</span>
+                </div>
+                <h1 class="font-bold text-xl">Olá Usuário</h1>
+            </div>
+            <button class="text-white" onclick="toggleMenu()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-16 px-6">
+        <!-- Card Section -->
+        <section class="mb-8">
+            <div class="card sbl-red text-white p-6 relative h-48" onclick="showCardDetails()">
+                <div class="flex justify-between items-start mb-6">
+                    <span class="text-sm opacity-80">Cartão de crédito</span>
+                    <span class="text-sm">•••• •••• •••• 1234</span>
+                </div>
+                <div class="absolute bottom-6 left-6 right-6">
+                    <p class="text-sm opacity-80">Nome do Titular</p>
+                    <div class="flex justify-between items-end">
+                        <h2 class="text-2xl font-medium">Usuário</h2>
+                        <div clas
+="text-right">
+                            <div class="text-xs opacity-80">Mastercard</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Balance Section -->
+        <section class="bg-white rounded-lg p-6 shadow-sm mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-medium">Saldo disponível</h3>
+                <span class="text-green-600 font-bold" id="saldo-disponivel">R$ 8.756,23</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <h3 class="font-medium">Limite disponível</h3>
+                <span class="text-green-600 font-bold">R$ 9.751,10</span>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="mb-8">
+            <h3 class="font-medium text-lg mb-4">Ações rápidas</h3>
+            <div class="grid grid-cols-4 gap-4">
+                <button class="action-button flex flex-col items-center justify-center bg-white rounded-lg p-4 shadow-sm" onclick="openPayModal()">
+                    <div class="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <span class="text-xs text-center">Pagar</span>
+                </button>
+                <button class="action-button flex flex-col items-center justify-center bg-white rounded-lg p-4 shadow-sm" onclick="openTransferModal()">
+                    <div class="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                    </div>
+                    <span class="text-xs text-center">Transferir</span>
+                </button>
+                <button class="action-button flex flex-col items-center justify-center bg-white rounded-lg p-4 shadow-sm" onclick="openDepositModal()">
+                    <div class="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <span class="text-xs text-center">Depositar</span>
+                </button>
+                <button class="action-button flex flex-col items-center justify-center bg-white rounded-lg p-4 shadow-sm" onclick="openRechargeModal()">
+                    <div class="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <span class="text-xs text-center">Recarregar</span>
+                </button>
+                <!-- New Loan Button -->
+                <button class="action-button flex flex-col items-center justify-center bg-white rounded-lg p-4 shadow-sm" onclick="openLoanModal()">
+                    <div class="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                    </div>
+                    <span class="text-xs text-center">Empréstimo</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Recent Transactions -->
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-medium text-lg">Últimas transações</h3>
+                <button class="text-red-600 text-sm" onclick="showAllTransactions()">Ver todas</button>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden" id="transactions-container">
+                <div class="transaction-item px-6">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-start">
+                            <div class="bg-red-100 rounded-full p-2 mr-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Mercado Livre</h4>
+                                <p class="text-gray-500 text-sm">Compra online</p>
+                            </div>
+                        </div>
+                        <span class="font-medium text-red-500">- R$ 149,90</span>
+                    </div>
+                </div>
+                
+                <div class="transaction-item px-6">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-start">
+                            <div class="bg-red-100 rounded-full p-2 mr-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Transferência recebida</h4>
+                                <p class="text-gray-500 text-sm">João Silva</p>
+                            </div>
+                        </div>
+                        <span class="font-medium text-green-500">+ R$ 500,00</span>
+                    </div>
+                </div>
+                
+                <div class="transaction-item px-6">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-start">
+                            <div class="bg-red-100 rounded-full p-2 mr-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Netflix</h4>
+                                <p class="text-gray-500 text-sm">Assinatura mensal</p>
+                            </div>
+                        </div>
+                        <span class="font-medium text-red-500">- R$ 39,90</span>
+                    </div>
+                </div>
+                
+                <div class="transaction-item px-6">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-start">
+                            <div class="bg-red-100 rounded-full p-2 mr-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">Supermercado</h4>
+                                <p class="text-gray-500 text-sm">Pão de Açúcar</p>
+                            </div>
+                        </div>
+                        <span class="font-medium text-red-500">- R$ 287,65</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating Action Button -->
+    <button class="floating-button fixed bottom-6 right-6 bg-red-600 text-white rounded-full p-4 shadow-lg" onclick="openQuickActionsModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+    </button>
+
+    <!-- Modals -->
+    <!-- Pay Modal -->
+    <div id="payModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Pagar Conta</h2>
+            <form onsubmit="processPay(event)">
+                <div class="form-group">
+                    <label>Código de barras ou linha digitável</label>
+                    <input type="text" id="payCode" placeholder="Digite o código de barras" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="payAmount" step="0.01" placeholder="0,00" required>
+                </div>
+                <button type="submit" class="btn-primary">Pagar</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('payModal')">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div id="transferModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Transferir</h2>
+            <form onsubmit="processTransfer(event)">
+                <div class="form-group">
+                    <label>Tipo de transferência</label>
+                    <select id="transferType" required>
+                        <option value="">Selecione</option>
+                        <option value="pix">PIX</option>
+                        <option value="ted">TED</option>
+                        <option value="doc">DOC</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Destinatário</label>
+                    <input type="text" id="transferRecipient" placeholder="Nome ou chave PIX" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="transferAmount" step="0.01" placeholder="0,00" required>
+                </div>
+                <button type="submit" class="btn-primary">Transferir</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('transferModal')">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Deposit Modal -->
+    <div id="depositModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Depositar</h2>
+            <form onsubmit="processDeposit(event)">
+                <div class="form-group">
+                    <label>Tipo de depósito</label>
+                    <select id="depositType" required>
+                        <option value="">Selecione</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="transferencia">Transferência</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="depositAmount" step="0.01" placeholder="0,00" required>
+                </div>
+                <button type="submit" class="btn-primary">Depositar</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('depositModal')">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recharge Modal -->
+    <div id="rechargeModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Recarregar Celular</h2>
+            <form onsubmit="processRecharge(event)">
+                <div class="form-group">
+                    <label>Operadora</label>
+                    <select id="rechargeOperator" required>
+                        <option value="">Selecione</option>
+                        <option value="vivo">Vivo</option>
+                        <option value="claro">Claro</option>
+                        <option value="tim">TIM</option>
+                        <option value="oi">Oi</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Número do celular</label>
+                    <input type="tel" id="rechargePhone" placeholder="(11) 99999-9999" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <select id="rechargeAmount" required>
+                        <option value="">Selecione</option>
+                        <option value="10">R$ 10,00</option>
+                        <option value="15">R$ 15,00</option>
+                        <option value="20">R$ 20,00</option>
+                        <option value="30">R$ 30,00</option>
+                        <option value="50">R$ 50,00</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Recarregar</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('rechargeModal')">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loan Modal (New) -->
+    <div id="loanModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Simular Empréstimo</h2>
+            <form onsubmit="processLoan(event)">
+                <div class="form-group">
+                    <label>Valor desejado (R$)</label>
+                    <input type="number" id="loanAmount" step="100" placeholder="Ex: 1000,00" required>
+                </div>
+                <div class="form-group">
+                    <label>Número de parcelas</label>
+                    <select id="loanInstallments" required>
+                        <option value="">Selecione</option>
+                        <option value="6">6x</option>
+                        <option value="12">12x</option>
+                        <option value="24">24x</option>
+                        <option value="36">36x</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Simular</button>
+                <button type="button" class="btn-secondary" onclick="closeModal('loanModal')">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quick Actions Modal -->
+    <div id="quickActionsModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Ações Rápidas</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="btn-primary" onclick="closeModal('quickActionsModal'); openPayModal();">Pagar</button>
+                <button class="btn-primary" onclick="closeModal('quickActionsModal'); openTransferModal();">Transferir</button>
+                <button class="btn-primary" onclick="closeModal('quickActionsModal'); openDepositModal();">Depositar</button>
+                <button class="btn-primary" onclick="closeModal('quickActionsModal'); openRechargeModal();">Recarregar</button>
+                <button class="btn-primary" onclick="closeModal('quickActionsModal'); openLoanModal();">Empréstimo</button>
+            </div>
+            <button type="button" class="btn-secondary" onclick="closeModal('quickActionsModal')">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Card Details Modal -->
+    <div id="cardModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-xl font-bold mb-4">Detalhes do Cartão</h2>
+            <div class="space-y-4">
+                <div class="flex justify-between">
+                    <span>Número:</span>
+                    <span>•••• •••• •••• 1234</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Titular:</span>
+                    <span>Usuário Padrão</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Validade:</span>
+                    <span>12/28</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Limite total:</span>
+                    <span>R$ 15.000,00</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Limite usado:</span>
+                    <span>R$ 5.248,90</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Limite disponível:</span>
+                    <span>R$ 9.751,10</span>
+                </div>
+            </div>
+            <button type="button" class="btn-secondary" onclick="closeModal('cardModal')">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Footer Credit -->
+    <div class="footer-credit">
+        Feito por: Bernardo Guidas
+    </div>
+
+    <script>
+// SBL App JavaScript Functions
+
+// Global variables
+let currentBalance = 8756.23;
+
+// Utility functions
+function formatCurrency(value) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(value);
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.className = `notification show ${type}`;
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+function updateBalance(newBalance) {
+    currentBalance = newBalance;
+    document.getElementById('saldo-disponivel').textContent = formatCurrency(currentBalance);
+}
+
+// Modal functions
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.add('show');
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.classList.remove('show');
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.classList.remove('show');
+    }
+});
+
+// Main action functions
+function openPayModal() {
+    openModal('payModal');
+}
+
+function openTransferModal() {
+    openModal('transferModal');
+}
+
+function openDepositModal() {
+    openModal('depositModal');
+}
+
+function openRechargeModal() {
+    openModal('rechargeModal');
+}
+
+function openLoanModal() {
+    openModal('loanModal');
+}
+
+function openQuickActionsModal() {
+    openModal('quickActionsModal');
+}
+
+function showCardDetails() {
+    openModal('cardModal');
+}
+
+// Process functions
+function processPay(event) {
+    event.preventDefault();
+    
+    const code = document.getElementById('payCode').value;
+    const amount = parseFloat(document.getElementById('payAmount').value);
+    
+    if (amount > currentBalance) {
+        showNotification('Saldo insuficiente!', 'error');
+        return;
+    }
+    
+    // Simulate payment processing
+    setTimeout(() => {
+        updateBalance(currentBalance - amount);
+        addTransaction('Pagamento realizado', `Código: ${code.substring(0, 10)}...`, -amount);
+        showNotification(`Pagamento de ${formatCurrency(amount)} realizado com sucesso!`);
+        closeModal('payModal');
+        document.getElementById('payCode').value = '';
+        document.getElementById('payAmount').value = '';
+    }, 1000);
+}
+
+function processTransfer(event) {
+    event.preventDefault();
+    
+    const type = document.getElementById('transferType').value;
+    const recipient = document.getElementById('transferRecipient').value;
+    const amount = parseFloat(document.getElementById('transferAmount').value);
+    
+    if (amount > currentBalance) {
+        showNotification('Saldo insuficiente!', 'error');
+        return;
+    }
+    
+    // Simulate transfer processing
+    setTimeout(() => {
+        updateBalance(currentBalance - amount);
+        addTransaction('Transferência enviada', recipient, -amount);
+        showNotification(`Transferência de ${formatCurrency(amount)} realizada com sucesso!`);
+        closeModal('transferModal');
+        document.getElementById('transferType').value = '';
+        document.getElementById('transferRecipient').value = '';
+        document.getElementById('transferAmount').value = '';
+    }, 1000);
+}
+
+function processDeposit(event) {
+    event.preventDefault();
+    
+    const type = document.getElementById('depositType').value;
+    const amount = parseFloat(document.getElementById('depositAmount').value);
+    
+    // Simulate deposit processing
+    setTimeout(() => {
+        updateBalance(currentBalance + amount);
+        addTransaction('Depósito realizado', `Tipo: ${type}`, amount);
+        showNotification(`Depósito de ${formatCurrency(amount)} realizado com sucesso!`);
+        closeModal('depositModal');
+        document.getElementById('depositType').value = '';
+        document.getElementById('depositAmount').value = '';
+    }, 1000);
+}
+
+function processRecharge(event) {
+    event.preventDefault();
+    
+    const operator = document.getElementById('rechargeOperator').value;
+    const phone = document.getElementById('rechargePhone').value;
+    const amount = parseFloat(document.getElementById('rechargeAmount').value);
+    
+    if (amount > currentBalance) {
+        showNotification('Saldo insuficiente!', 'error');
+        return;
+    }
+    
+    // Simulate recharge processing
+    setTimeout(() => {
+        updateBalance(currentBalance - amount);
+        addTransaction('Recarga de celular', `${operator.toUpperCase()} - ${phone}`, -amount);
+        showNotification(`Recarga de ${formatCurrency(amount)} realizada com sucesso!`);
+        closeModal('rechargeModal');
+        document.getElementById('rechargeOperator').value = '';
+        document.getElementById('rechargePhone').value = '';
+        document.getElementById('rechargeAmount').value = '';
+    }, 1000);
+}
+
+function processLoan(event) {
+    event.preventDefault();
+    
+    const amount = parseFloat(document.getElementById('loanAmount').value);
+    const installments = parseInt(document.getElementById('loanInstallments').value);
+    
+    // Simple interest calculation (2% per month)
+    const monthlyRate = 0.02;
+    const totalAmount = amount * (1 + monthlyRate * installments);
+    const monthlyPayment = totalAmount / installments;
+    
+    // Simulate loan processing
+    setTimeout(() => {
+        showNotification(`Empréstimo aprovado! ${installments}x de ${formatCurrency(monthlyPayment)}`);
+        closeModal('loanModal');
+        document.getElementById('loanAmount').value = '';
+        document.getElementById('loanInstallments').value = '';
+    }, 1000);
+}
+
+// Transaction management
+function addTransaction(title, description, amount) {
+    const container = document.getElementById('transactions-container');
+    const transactionDiv = document.createElement('div');
+    transactionDiv.className = 'transaction-item px-6';
+    
+    const isPositive = amount > 0;
+    const amountClass = isPositive ? 'text-green-500' : 'text-red-500';
+    const amountText = (isPositive ? '+ ' : '- ') + formatCurrency(Math.abs(amount));
+    
+    transactionDiv.innerHTML = `
+        <div class="flex justify-between items-start">
+            <div class="flex items-start">
+                <div class="bg-red-100 rounded-full p-2 mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="font-medium">${title}</h4>
+                    <p class="text-gray-500 text-sm">${description}</p>
+                </div>
+            </div>
+            <span class="font-medium ${amountClass}">${amountText}</span>
+        </div>
+    `;
+    
+    // Insert at the beginning
+    container.insertBefore(transactionDiv, container.firstChild);
+    
+    // Keep only the last 10 transactions
+    const transactions = container.children;
+    if (transactions.length > 10) {
+        container.removeChild(transactions[transactions.length - 1]);
+    }
+}
+
+function showAllTransactions() {
+    showNotification('Funcionalidade em desenvolvimento!', 'info');
+}
+
+// Menu toggle
+function toggleMenu() {
+    showNotification('Menu em desenvolvimento!', 'info');
+}
+
+// Phone number formatting
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('rechargePhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 11) {
+                value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 7) {
+                value = value.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+            }
+            e.target.value = value;
+        });
+    }
+});
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('SBL App carregado com sucesso!');
+    
+    // Add some sample transactions on load
+    setTimeout(() => {
+        showNotification('Bem-vindo ao SBL!', 'success');
+    }, 500);
+    
+    // Add custom styles for notifications
+    const style = document.createElement('style');
+    style.textContent = `
+        .notification.error {
+            background: #f44336;
+        }
+        .notification.info {
+            background: #2196F3;
+        }
+        .notification.success {
+            background: #4CAF50;
+        }
+    `;
+    document.head.appendChild(style);
+});
+    </script>
+</body>
+</html>
+
